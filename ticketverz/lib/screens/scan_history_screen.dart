@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/scan_result.dart';
+
 import '../providers/scan_provider.dart';
 import '../widgets/ticket_card.dart';
 
