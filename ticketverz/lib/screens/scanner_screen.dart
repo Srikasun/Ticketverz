@@ -3,6 +3,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:ticketverz/Models/scan_result.dart';
+import 'package:ticketverz/screens/scan_result_screen.dart';
+
 class ScannerScreen extends StatefulWidget {
   @override
   _ScannerScreenState createState() => _ScannerScreenState();
@@ -31,58 +34,78 @@ class _ScannerScreenState extends State<ScannerScreen> {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData["status"] == "Ok" && responseData["code"] == 200) {
-          _showResultDialog(
-            title: "Success",
-            message: "The ticket is valid!",
+          // Extract details from the response to create a ScanResult object
+          final result = ScanResult(
             isValid: true,
+            movieName: responseData["data"]["movieName"] ?? "Unknown",
+            date: responseData["data"]["date"] ?? "Unknown",
+            time: responseData["data"]["time"] ?? "Unknown",
+            seatNumber: responseData["data"]["seatNumber"] ?? "Unknown",
+          );
+
+          // Navigate to ScanResultScreen with valid result data
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ScanResultScreen(result: result),
+            ),
           );
         } else {
-          _showResultDialog(
-            title: "Invalid Ticket",
-            message: "The ticket is not valid.",
+          // Create an invalid ScanResult object
+          final result = ScanResult(
             isValid: false,
+            movieName: "N/A",
+            date: "N/A",
+            time: "N/A",
+            seatNumber: "N/A",
+          );
+
+          // Navigate to ScanResultScreen with invalid result data
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ScanResultScreen(result: result),
+            ),
           );
         }
       } else {
-        _showResultDialog(
-          title: "Error",
-          message: "Failed to verify the ticket. Please try again.",
+        // Handle error response
+        final result = ScanResult(
           isValid: false,
+          movieName: "N/A",
+          date: "N/A",
+          time: "N/A",
+          seatNumber: "N/A",
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ScanResultScreen(result: result),
+          ),
         );
       }
     } catch (e) {
-      _showResultDialog(
-        title: "Network Error",
-        message: "An error occurred: $e",
+      // Handle network error
+      final result = ScanResult(
         isValid: false,
+        movieName: "N/A",
+        date: "N/A",
+        time: "N/A",
+        seatNumber: "N/A",
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ScanResultScreen(result: result),
+        ),
       );
     } finally {
       setState(() {
         _isScanning = false;
       });
     }
-  }
-
-  // Function to show result dialog
-  void _showResultDialog(
-      {required String title, required String message, required bool isValid}) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   // Handle QR code detection
